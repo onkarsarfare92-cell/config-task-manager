@@ -1,0 +1,41 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+
+        - id: user-service
+          uri: ${services.user-service.url}
+          predicates:
+            - Path=/users/**
+          filters:
+            - StripPrefix=1
+
+        - id: task-service
+          uri: ${services.task-service.url}
+          predicates:
+            - Path=/tasks/**
+          filters:
+            - StripPrefix=1
+
+        - id: notification-service
+          uri: ${services.notification-service.url}
+          predicates:
+            - Path=/notifications/**
+          filters:
+            - StripPrefix=1
+
+services:
+  user-service:
+    url: http://localhost:8080
+
+  task-service:
+    url: http://localhost:8081
+
+  notification-service:
+    url: http://localhost:8082
