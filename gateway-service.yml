@@ -39,3 +39,8 @@ services:
 
   notification-service:
     url: http://localhost:8082
+management:
+  endpoints:
+    web:
+      exposure:
+        include: gateway,health    
