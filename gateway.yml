@@ -12,23 +12,17 @@ spring:
         - id: user-service
           uri: ${services.user-service.url}
           predicates:
-            - Path=/users/**
-          filters:
-            - StripPrefix=1
+            - Path=/users, /users/**
 
         - id: task-service
           uri: ${services.task-service.url}
           predicates:
-            - Path=/tasks/**
-          filters:
-            - StripPrefix=1
+            - Path=/tasks, /tasks/**
 
         - id: notification-service
           uri: ${services.notification-service.url}
           predicates:
-            - Path=/notifications/**
-          filters:
-            - StripPrefix=1
+            - Path=/notifications, /notifications/**
 
 services:
   user-service:
@@ -39,8 +33,9 @@ services:
 
   notification-service:
     url: http://localhost:8082
+
 management:
   endpoints:
     web:
       exposure:
-        include: gateway,health    
+        include: gateway,health
