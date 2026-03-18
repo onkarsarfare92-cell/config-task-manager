@@ -36,10 +36,6 @@ spring:
           predicates:
             - Path=/tasks, /tasks/**
           filters:
-            - name: CircuitBreaker
-              args:
-                name: taskCircuitBreaker
-                fallbackUri: forward:/fallback/tasks
 
             - name: Retry
               args:
