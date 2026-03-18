@@ -73,7 +73,6 @@ spring:
 
         task-service:
           - uri: http://localhost:8081
-          - uri: http://localhost:8083
 
         notification-service:
           - uri: http://localhost:8082
