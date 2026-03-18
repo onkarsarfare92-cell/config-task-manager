@@ -8,16 +8,19 @@ spring:
   cloud:
     gateway:
       httpclient:
-        connect-timeout: 5000      # 5 seconds
-        response-timeout: 10s      # 10 seconds
+        connect-timeout: 3000
+        response-timeout: 5s
 
       routes:
 
-        # ---------------- USER SERVICE ----------------
-        - id: user-service
+        # ================= USER SERVICE =================
+
+        # ✅ READ APIs (GET)
+        - id: user-service-get
           uri: http://localhost:8080
           predicates:
             - Path=/users, /users/**
+            - Method=GET
           filters:
             - name: CircuitBreaker
               args:
@@ -25,34 +28,53 @@ spring:
                 fallbackUri: forward:/fallback/users
             - name: Retry
               args:
-                retries: 3
+                retries: 2
                 statuses: BAD_GATEWAY, INTERNAL_SERVER_ERROR
-                methods: GET, POST
+                methods: GET
 
-        # ---------------- TASK SERVICE ----------------
-        - id: task-service
+        # ❌ WRITE APIs (POST, PUT, DELETE)
+        - id: user-service-write
+          uri: http://localhost:8080
+          predicates:
+            - Path=/users, /users/**
+            - Method=POST,PUT,DELETE
+
+
+        # ================= TASK SERVICE =================
+
+        # ✅ READ APIs (GET)
+        - id: task-service-get
           uri: http://localhost:8081
           predicates:
             - Path=/tasks, /tasks/**
+            - Method=GET
           filters:
-            # - name: CircuitBreaker
-            #   args:
-            #     name: taskCircuitBreaker
-            #     fallbackUri: forward:/fallback/tasks
+            - name: CircuitBreaker
+              args:
+                name: taskCircuitBreaker
+                fallbackUri: forward:/fallback/tasks
             - name: Retry
               args:
-                retries: 3
+                retries: 2
                 statuses: BAD_GATEWAY, INTERNAL_SERVER_ERROR
-                methods: GET, POST
-                exceptions:
-                    - java.io.IOException
-                    - java.net.ConnectException
+                methods: GET
 
-        # ---------------- NOTIFICATION SERVICE ----------------
-        - id: notification-service
+        # ❌ WRITE APIs (POST, PUT, DELETE)
+        - id: task-service-write
+          uri: http://localhost:8081
+          predicates:
+            - Path=/tasks, /tasks/**
+            - Method=POST,PUT,DELETE
+
+
+        # ================= NOTIFICATION SERVICE =================
+
+        # ✅ READ APIs (GET)
+        - id: notification-service-get
           uri: http://localhost:8082
           predicates:
             - Path=/notifications, /notifications/**
+            - Method=GET
           filters:
             - name: CircuitBreaker
               args:
@@ -60,36 +82,50 @@ spring:
                 fallbackUri: forward:/fallback/notifications
             - name: Retry
               args:
-                retries: 3
+                retries: 2
                 statuses: BAD_GATEWAY, INTERNAL_SERVER_ERROR
-                methods: GET, POST
+                methods: GET
 
-# RESILIENCE CONFIGURATION
+        # ❌ WRITE APIs (POST)
+        - id: notification-service-write
+          uri: http://localhost:8082
+          predicates:
+            - Path=/notifications, /notifications/**
+            - Method=POST
+
+
+# ================= RESILIENCE CONFIG =================
+
 resilience4j:
   circuitbreaker:
     instances:
       userCircuitBreaker:
-        slidingWindowSize: 20
-        failureRateThreshold: 70
-        waitDurationInOpenState: 20s
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
 
       taskCircuitBreaker:
-        slidingWindowSize: 20
-        failureRateThreshold: 70
-        waitDurationInOpenState: 20s
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
 
       notificationCircuitBreaker:
-        slidingWindowSize: 20
-        failureRateThreshold: 70
-        waitDurationInOpenState: 20s
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
 
-# MANAGEMENT ENDPOINTS
+
+# ================= MANAGEMENT =================
+
 management:
   endpoints:
     web:
       exposure:
         include: gateway,health
-        
+
+
+# ================= LOGGING =================
+
 logging:
   level:
-    org.springframework.cloud.gateway.filter.factory.RetryGatewayFilterFactory: TRACE        
+    org.springframework.cloud.gateway: INFO
